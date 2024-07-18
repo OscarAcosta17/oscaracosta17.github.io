@@ -52,11 +52,11 @@ def upload_and_process(request):
     if request.method == 'POST' and request.FILES['audio']:
         audio_file = request.FILES['audio']
 
-        # Realizar la transcripción del audio y obtener la ruta del documento .docx
+        # transcripción del audio y ruta del documento .docx
         ruta_docx = transcribe_audio(audio_file)
 
         if ruta_docx:
-            # Crear la respuesta HTTP para la descarga automática del archivo .docx
+            #respuesta HTTP para descarga automática del .docx
             with open(ruta_docx, 'rb') as docx_file:
                 response = HttpResponse(docx_file.read(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
                 response['Content-Disposition'] = f'attachment; filename="{os.path.basename(ruta_docx)}"'

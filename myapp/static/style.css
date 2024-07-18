@@ -1,0 +1,94 @@
+
+body {
+    text-align: center;
+    background-color: #DCE0D9;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    width: 810px; 
+    text-align: center;
+    font-family: 'Arial', sans-serif;
+    display: block;
+}
+
+.btn-container {
+    text-align: center;
+    margin: 20px;
+    position: relative;
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 45px;
+}
+
+.upload-form {
+    margin-top: 20px;
+}
+.message {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 5px;
+}
+.error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+.success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+/* Estilos para el indicador de carga */
+.loading {
+    display: none; /* Ocultar el indicador de carga inicialmente */
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Estilos para los botones */
+button[type="submit"] {
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease-out;
+}
+
+/* Estilos para los botones al pasar el cursor */
+button[type="submit"]:hover {
+    transform: scale(1.05); /* Agranda el botón al 105% */
+}
+
+input[type="file"] {
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease-out;
+}
+
+/* Estilos para el botón al pasar el cursor */
+input[type="file"]:hover {
+    transform: scale(1.05); /* Agranda el botón al 105% */
+}
+

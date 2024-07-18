@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Transcripción de Audio</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+    <style>
+        /* Estilo adicional para el botón de selección de archivo personalizado */
+        .custom-file-input {
+            display: none; /* Ocultar el input type="file */
+        }
+        .custom-file-button {
+            background-color: #000; /* Color de fondo del botón */
+            color: #fff; /* Color del texto del botón */
+            border: none; /* Quitar borde del botón */
+            border-radius: 20px; /* Borde redondeado */
+            padding: 10px 20px; /* Espaciado interno del botón */
+            font-size: 16px; /* Tamaño de la fuente */
+            cursor: pointer; /* Cursor estilo puntero al pasar el ratón */
+            transition: transform 0.2s ease-out; /* Transición suave al pasar el cursor */
+            display: inline-block; /* Mostrar como elemento de bloque en línea */
+            position: relative; /* Posición relativa para alinear el nombre del archivo */
+        }
+        .custom-file-button:hover {
+            transform: scale(1.05); /* Agranda el botón al 105% al pasar el cursor */
+        }
+        .loading img {
+            width: 150px; /* Ajustar el tamaño del GIF de carga */
+            height: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Subir Archivo de Audio</h2>
+        
+        <form id="upload-form" class="upload-form" action="{% url 'upload_and_process' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="audio-upload" class="custom-file-button" id="custom-button">Subir audio<span id="selected-file-name"></span></label>
+            <input id="audio-upload" class="custom-file-input" type="file" name="audio" accept=".mp3" required>
+            <button type="submit" id="transcribe-btn">Transcribir y Descargar</button>
+        </form>
+
+        <div id="transcription-progress" class="loading">
+            <p>Transcribiendo...</p>
+            <img src="{% static 'Loading_icon.gif' %}" alt="Cargando">
+        </div>
+
+        <div id="transcription-message" class="message"></div>
+    </div>
+
+    <script>
+        // Event listener para actualizar el texto del botón con el nombre del archivo seleccionado
+        document.getElementById('audio-upload').addEventListener('change', function() {
+            var fileName = this.files[0].name;
+            document.getElementById('selected-file-name').textContent = ' | ' + fileName;
+        });
+
+        // Mostrar progreso y limpiar mensajes al enviar el formulario
+        document.getElementById('upload-form').addEventListener('submit', function() {
+            document.getElementById('transcription-progress').style.display = 'block'; // Mostrar indicador de carga
+            document.getElementById('transcription-message').innerHTML = ''; // Limpiar mensajes anteriores
+        });
+
+        // Escuchar la respuesta del servidor
+        document.getElementById('upload-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evitar la acción predeterminada de envío del formulario
+
+            var form = event.target;
+            var formData = new FormData(form);
+
+            fetch(form.action, {
+                method: form.method,
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al transcribir el audio.');
+                }
+                return response.blob(); // Convertir la respuesta a un objeto blob (archivo)
+            })
+            .then(blob => {
+                // Crear una URL del blob para descargar el archivo .docx
+                var url = URL.createObjectURL(blob);
+
+                // Crear un enlace y hacer clic en él para descargar el archivo
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'transcripcion.docx'; // Nombre del archivo .docx
+                document.body.appendChild(a);
+                a.click();
+
+                // Mostrar mensaje de éxito
+                showTranscriptionResult(true, 'Transcripción completada y archivo descargado correctamente.');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showTranscriptionResult(false, 'Error al transcribir el audio.');
+            })
+            .finally(() => {
+                document.getElementById('transcription-progress').style.display = 'none'; // Ocultar indicador de carga
+            });
+        });
+
+        // Función para mostrar mensaje de éxito o error
+        function showTranscriptionResult(success, message) {
+            var messageDiv = document.getElementById('transcription-message');
+
+            messageDiv.innerHTML = message; // Mostrar mensaje
+
+            if (success) {
+                messageDiv.classList.add('success');
+            } else {
+                messageDiv.classList.add('error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -20,7 +20,7 @@ def transcribe_audio(audio_file):
         print(f"Ruta del archivo de audio: {ruta_audio}")  # Debug: Verificar la ruta del archivo de audio
 
         # Ejemplo de transcripción usando Whisper
-        model = whisper.load_model("medium")
+        model = whisper.load_model("base")
         print(f"Modelo cargado correctamente: {model}")  # Debug: Verificar que el modelo se carga correctamente
 
         result = model.transcribe(ruta_audio)

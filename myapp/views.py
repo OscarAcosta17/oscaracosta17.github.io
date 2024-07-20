@@ -1,7 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from docx import Document
 import os
 import whisper
@@ -9,7 +11,7 @@ import whisper
 def index(request):
     return render(request, 'index.html')
 
-def transcribe_audio(audio_file):
+def transcribe_audio(audio_file, docx_filename):
     try:
         # Guardar el archivo de audio en la carpeta "Clases" del sistema de archivos de Django
         fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'Clases'))
@@ -32,8 +34,9 @@ def transcribe_audio(audio_file):
         doc = Document()
         doc.add_paragraph(texto_transcrito)
 
+
         # Nombre del archivo .docx y carpeta donde se guardará
-        nombre_archivo = audio_file.name.split('.')[0] + ".docx"
+        nombre_archivo = docx_filename + ".docx"
         carpeta_transcripciones = "Transcripciones"
         ruta_completa = os.path.join(settings.MEDIA_ROOT, carpeta_transcripciones, nombre_archivo)
         print(f"Ruta del documento .docx: {ruta_completa}")  # Debug: Verificar la ruta del documento .docx
@@ -51,9 +54,10 @@ def transcribe_audio(audio_file):
 def upload_and_process(request):
     if request.method == 'POST' and request.FILES['audio']:
         audio_file = request.FILES['audio']
+        docx_filename = request.POST.get('docx_filename', 'archivo_sin_nombre')
 
         # transcripción del audio y ruta del documento .docx
-        ruta_docx = transcribe_audio(audio_file)
+        ruta_docx = transcribe_audio(audio_file, docx_filename)
 
         if ruta_docx:
             #respuesta HTTP para descarga automática del .docx
@@ -65,3 +69,8 @@ def upload_and_process(request):
             return HttpResponse('Error en la transcripción del audio.', status=500)
 
     return render(request, 'index.html')
+
+def get_transcriptions(request):
+    transcription_dir = os.path.join(settings.MEDIA_ROOT, 'Transcripciones')
+    files = [f for f in os.listdir(transcription_dir) if os.path.isfile(os.path.join(transcription_dir, f))]
+    return JsonResponse({'files': files})

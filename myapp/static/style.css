@@ -1,4 +1,3 @@
-
 body {
     text-align: center;
     background-color: #DCE0D9;
@@ -15,16 +14,9 @@ body {
     padding: 20px;
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    width: 810px; 
+    width: 810px;
     text-align: center;
     font-family: 'Arial', sans-serif;
-    display: block;
-}
-
-.btn-container {
-    text-align: center;
-    margin: 20px;
-    position: relative;
 }
 
 h2 {
@@ -36,16 +28,19 @@ h2 {
 .upload-form {
     margin-top: 20px;
 }
+
 .message {
     margin-top: 20px;
     padding: 10px;
     border-radius: 5px;
 }
+
 .error {
     background-color: #f8d7da;
     border-color: #f5c6cb;
     color: #721c24;
 }
+
 .success {
     background-color: #d4edda;
     border-color: #c3e6cb;
@@ -59,8 +54,16 @@ h2 {
     margin-top: 20px;
 }
 
+.loading img {
+    width: 150px; 
+    height: 110px;
+    cursor: none;
+}   
+
 /* Estilos para los botones */
-button[type="submit"] {
+button[type="submit"],
+#transcribe-btn,
+#save-filename-btn {
     background-color: #000;
     color: #fff;
     border: none;
@@ -72,23 +75,181 @@ button[type="submit"] {
 }
 
 /* Estilos para los botones al pasar el cursor */
-button[type="submit"]:hover {
+button[type="submit"]:hover,
+#transcribe-btn:hover,
+#save-filename-btn:hover {
     transform: scale(1.05); /* Agranda el botón al 105% */
 }
 
-input[type="file"] {
-    background-color: #000;
-    color: #fff;
-    border: none;
-    border-radius: 20px;
-    padding: 10px 20px;
-    font-size: 16px;
+#transcribe-btn:hover {
+    background-color: #7c1080;
+}
+
+#save-filename-btn:hover {
+    background-color: #3cc719;
+    color: black;
+}
+
+/* Estilo para el botón de archivo personalizado */
+.custom-file-button {
+    background-color: #000; /* Color de fondo del botón */
+    color: #fff; /* Color del texto del botón */
+    border: none; /* Quitar borde del botón */
+    border-radius: 20px; /* Borde redondeado */
+    padding: 10px 20px; /* Espaciado interno del botón */
+    font-size: 16px; /* Tamaño de la fuente */
+    cursor: pointer; /* Cursor estilo puntero al pasar el ratón */
+    transition: transform 0.2s ease-out; /* Transición suave al pasar el cursor */
+    display: inline-block; /* Mostrar como elemento de bloque en línea */
+    position: relative; /* Posición relativa para alinear el nombre del archivo */
+}
+
+.custom-file-button:hover {
+    transform: scale(1.05); /* Agranda el botón al 105% al pasar el cursor */
+    background-color: #268010;
+}
+
+/* Ocultar el input type="file" */
+.custom-file-input {
+    display: none;
+}
+
+/* Estilo para el modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 15px;
+    width: 50%;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
     cursor: pointer;
+}
+
+/* Estilo para el campo de texto en el modal */
+#docx-filename {
+    width: 50%; /* Ajusta el ancho */
+    padding: 12px; /* Aumenta el relleno para hacerlo más grande */
+    border-radius: 10px; /* Bordes redondeados */
+    border: 1px solid #929292; /* Añade un borde gris claro */
+    font-size: 16px; /* Tamaño de fuente más grande */
+    box-sizing: border-box; /* Incluye el relleno y el borde en el tamaño total del elemento */
+}
+
+.message.error {
+    color: red;
+    font-weight: bold;
+}
+
+.message.success {
+    color: green;
+    font-weight: bold;
+}
+
+button[type="history"]{
+    background-color: #aaa;
+}
+
+#history {
+    background-color: #fff; /* Color de fondo */
+    border: none; /* Sin borde */
+    color: black; /* Color del texto */
+    padding: 0.5rem 0.5rem; /* Relleno, unidades relativas */
+    display: inline-block; /* Mostrar en línea */
+    cursor: pointer; /* Cambiar el cursor al pasar sobre el botón */
+    border-radius: 19px; /* Bordes redondeados */
+    position: fixed; /* Posicionamiento fijo */
+    top: 2%; /* Espaciado desde el borde superior */
+    right: 1%; /* Espaciado desde el borde derecho */
     transition: transform 0.2s ease-out;
 }
 
-/* Estilos para el botón al pasar el cursor */
-input[type="file"]:hover {
-    transform: scale(1.05); /* Agranda el botón al 105% */
+/* Estilo al pasar el cursor sobre el botón */
+#history:hover {
+    background-color: #b7cbcf; /* Color de fondo al pasar el cursor */
+    transform: scale(1.05);
 }
+
+#history img {
+    width: 50px; /* Ajustar el ancho de la imagen en pantallas más pequeñas */
+}
+
+/* Estilos para el panel del historial */
+#history-panel {
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 300px;
+    height: 400px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    z-index: 1000;
+}
+#history-panel h3 {
+    margin: 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+}
+#history-panel ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+#history-panel ul li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+#history-panel ul li:last-child {
+    border-bottom: none;
+}
+#history-panel button {
+    
+    color: #aaa;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    padding: 5px 10px;
+    float: right;
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    transition: transform 0.1s ease-out;
+}
+#history-panel button:hover {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+    transform: scale(1.05);
+}
+
 

@@ -6,31 +6,6 @@
     <title>Transcripción de Audio</title>
     <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
     <link rel="icon" href="{% static 'logo.ico' %}" type="image/x-icon">
-    <style>
-        /* Estilo adicional para el botón de selección de archivo personalizado */
-        .custom-file-input {
-            display: none; /* Ocultar el input type="file */
-        }
-        .custom-file-button {
-            background-color: #000; /* Color de fondo del botón */
-            color: #fff; /* Color del texto del botón */
-            border: none; /* Quitar borde del botón */
-            border-radius: 20px; /* Borde redondeado */
-            padding: 10px 20px; /* Espaciado interno del botón */
-            font-size: 16px; /* Tamaño de la fuente */
-            cursor: pointer; /* Cursor estilo puntero al pasar el ratón */
-            transition: transform 0.2s ease-out; /* Transición suave al pasar el cursor */
-            display: inline-block; /* Mostrar como elemento de bloque en línea */
-            position: relative; /* Posición relativa para alinear el nombre del archivo */
-        }
-        .custom-file-button:hover {
-            transform: scale(1.05); /* Agranda el botón al 105% al pasar el cursor */
-        }
-        .loading img {
-            width: 150px; /* Ajustar el tamaño del GIF de carga */
-            height: 120px;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -40,10 +15,11 @@
             {% csrf_token %}
             <label for="audio-upload" class="custom-file-button" id="custom-button">Subir audio<span id="selected-file-name"></span></label>
             <input id="audio-upload" class="custom-file-input" type="file" name="audio" accept=".mp3" required>
-            <button type="submit" id="transcribe-btn">Transcribir y Descargar</button>
+            <input type="hidden" id="hidden-docx-filename" name="docx_filename">
+            <button type="button" id="transcribe-btn">Transcribir y Descargar</button>
         </form>
 
-        <div id="transcription-progress" class="loading">
+        <div id="transcription-progress" class="loading" style="display:none;">
             <p>Transcribiendo...</p>
             <img src="{% static 'Loading_icon.gif' %}" alt="Cargando">
         </div>
@@ -51,69 +27,162 @@
         <div id="transcription-message" class="message"></div>
     </div>
 
+    <!-- Modal for file name input -->
+    <div id="filenameModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Nombre del Archivo</h2>
+            <input type="text" id="docx-filename" placeholder="Ingrese el nombre del archivo .docx" required>
+            <button type="button" id="save-filename-btn">Guardar</button>
+        </div>
+    </div>
+
+    <!-- Panel for history -->
+    <div id="history-panel">
+        <button id="close-history-panel">X</button>
+        <h3>Historial</h3>
+        <ul id="history-list">
+            <!-- Los elementos de historial se llenarán con JavaScript -->
+        </ul>
+    </div>
+
+    <div>
+        <button type="button" id="history"> 
+            <img src="{% static 'historial.png' %}" alt="historial">
+        </button>
+    </div>
+
     <script>
+        // Obtener elementos del DOM
+        var modal = document.getElementById("filenameModal");
+        var transcribeBtn = document.getElementById("transcribe-btn");
+        var saveFilenameBtn = document.getElementById("save-filename-btn");
+        var closeModal = document.getElementsByClassName("close")[0];
+        var filenameInput = document.getElementById("docx-filename");
+        var audioUpload = document.getElementById('audio-upload');
+        var transcriptionMessage = document.getElementById('transcription-message');
+        var historyPanel = document.getElementById("history-panel");
+        var historyBtn = document.getElementById("history");
+        var closeHistoryPanelBtn = document.getElementById("close-history-panel");
+        var historyList = document.getElementById("history-list");
+
+        // Event listener para mostrar el modal
+        transcribeBtn.addEventListener("click", function() {
+            if (!audioUpload.value) {
+                showTranscriptionResult(false, 'Por favor, suba un archivo de audio antes de continuar.');
+            } else {
+                modal.style.display = "block";
+            }
+        });
+
+        // Event listener para cerrar el modal
+        closeModal.addEventListener("click", function() {
+            modal.style.display = "none";
+        });
+
+        // Event listener para cerrar el modal si se hace clic fuera de él
+        window.addEventListener("click", function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        });
+
         // Event listener para actualizar el texto del botón con el nombre del archivo seleccionado
-        document.getElementById('audio-upload').addEventListener('change', function() {
+        audioUpload.addEventListener('change', function() {
             var fileName = this.files[0].name;
             document.getElementById('selected-file-name').textContent = ' | ' + fileName;
         });
 
-        // Mostrar progreso y limpiar mensajes al enviar el formulario
-        document.getElementById('upload-form').addEventListener('submit', function() {
-            document.getElementById('transcription-progress').style.display = 'block'; // Mostrar indicador de carga
-            document.getElementById('transcription-message').innerHTML = ''; // Limpiar mensajes anteriores
+        // Event listener para guardar el nombre del archivo y enviar el formulario
+        saveFilenameBtn.addEventListener("click", function() {
+            var docxFilename = filenameInput.value.trim();
+            if (docxFilename) {
+                modal.style.display = "none";
+                document.getElementById('transcription-progress').style.display = 'block'; // Mostrar indicador de carga
+                transcriptionMessage.innerHTML = ''; // Limpiar mensajes anteriores
+
+                document.getElementById('hidden-docx-filename').value = docxFilename;
+
+                var form = document.getElementById('upload-form');
+                var formData = new FormData(form);
+                
+                fetch(form.action, {
+                    method: form.method,
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al transcribir el audio.');
+                    }
+                    return response.blob(); // Convertir la respuesta a un objeto blob (archivo)
+                })
+                .then(blob => {
+                    // Crear una URL del blob para descargar el archivo .docx
+                    var url = URL.createObjectURL(blob);
+
+                    // Crear un enlace y hacer clic en él para descargar el archivo
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = docxFilename + '.docx'; // Usar el nombre ingresado por el usuario
+                    document.body.appendChild(a);
+                    a.click();
+
+                    // Agregar el nuevo archivo al historial
+                    addToHistory(docxFilename + '.docx');
+
+                    // Mostrar mensaje de éxito
+                    showTranscriptionResult(true, 'Transcripción completada y archivo descargado correctamente.');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showTranscriptionResult(false, 'Error al transcribir el audio.');
+                })
+                .finally(() => {
+                    document.getElementById('transcription-progress').style.display = 'none'; // Ocultar indicador de carga
+                });
+            } else {
+                alert("Por favor, ingrese un nombre de archivo válido.");
+            }
         });
 
-        // Escuchar la respuesta del servidor
-        document.getElementById('upload-form').addEventListener('submit', function(event) {
-            event.preventDefault(); // Evitar la acción predeterminada de envío del formulario
-
-            var form = event.target;
-            var formData = new FormData(form);
-
-            fetch(form.action, {
-                method: form.method,
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al transcribir el audio.');
-                }
-                return response.blob(); // Convertir la respuesta a un objeto blob (archivo)
-            })
-            .then(blob => {
-                // Crear una URL del blob para descargar el archivo .docx
-                var url = URL.createObjectURL(blob);
-
-                // Crear un enlace y hacer clic en él para descargar el archivo
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = 'transcripcion.docx'; // Nombre del archivo .docx
-                document.body.appendChild(a);
-                a.click();
-
-                // Mostrar mensaje de éxito
-                showTranscriptionResult(true, 'Transcripción completada y archivo descargado correctamente.');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showTranscriptionResult(false, 'Error al transcribir el audio.');
-            })
-            .finally(() => {
-                document.getElementById('transcription-progress').style.display = 'none'; // Ocultar indicador de carga
-            });
+        // Event listener para abrir el panel de historial
+        historyBtn.addEventListener("click", function() {
+            historyPanel.style.display = historyPanel.style.display === "block" ? "none" : "block";
+            if (historyPanel.style.display === "block") {
+                loadHistory(); // Cargar historial al abrir el panel
+            }
         });
+
+        // Event listener para cerrar el panel de historial
+        closeHistoryPanelBtn.addEventListener("click", function() {
+            historyPanel.style.display = "none";
+        });
+
+        // Función para cargar el historial de archivos
+        function loadHistory() {
+            fetch('{% url "get_transcriptions" %}')
+                .then(response => response.json())
+                .then(data => {
+                    historyList.innerHTML = ''; // Limpiar la lista actual
+                    data.files.forEach(filename => {
+                        var listItem = document.createElement('li');
+                        listItem.textContent = filename;
+                        historyList.appendChild(listItem);
+                    });
+                })
+                .catch(error => console.error('Error al cargar el historial:', error));
+        }
 
         // Función para mostrar mensaje de éxito o error
         function showTranscriptionResult(success, message) {
-            var messageDiv = document.getElementById('transcription-message');
-
-            messageDiv.innerHTML = message; // Mostrar mensaje
+            transcriptionMessage.innerHTML = message; // Mostrar mensaje
 
             if (success) {
-                messageDiv.classList.add('success');
+                transcriptionMessage.classList.remove('error');
+                transcriptionMessage.classList.add('success');
             } else {
-                messageDiv.classList.add('error');
+                transcriptionMessage.classList.remove('success');
+                transcriptionMessage.classList.add('error');
             }
         }
     </script>
